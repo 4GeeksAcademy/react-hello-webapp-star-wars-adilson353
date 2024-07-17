@@ -1,45 +1,59 @@
+
+
 const getState = ({ getStore, getActions, setStore }) => {
-	return {
-		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
-		},
-		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
+    return {
+        store: {
+            starships: [],
+            character: [],
+            planets: [],
+            favorites: "",
+            myFavorites: []
+        },
+        actions: {
+            // Use getActions to call a function within a function
+            changeFavorites: (titulo) => {
+                setStore({ favorites: titulo });
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
+                const store = getStore();
 
-				//reset the global store
-				setStore({ demo: demo });
-			}
-		}
-	};
+                if (store.myFavorites.includes(titulo)) {
+                    setStore({
+                        myFavorites: store.myFavorites.filter((favor) => favor !== titulo)
+                    });
+                } else {
+                    setStore({ myFavorites: [...store.myFavorites, titulo] });
+                }
+            },
+            deleteFavorite: (titulo) => {
+                const store = getStore();
+                setStore({
+                    myFavorites: store.myFavorites.filter((favor) => favor !== titulo)
+                });
+            },
+            loadSomeData: async () => {
+                try {
+                    
+                    const [starshipsResponse, peopleResponse, planetsResponse] = await Promise.all([
+                        fetch("https://www.swapi.tech/api/starships"),
+                        fetch("https://www.swapi.tech/api/people"),
+                        fetch("https://www.swapi.tech/api/planets")
+                    ]);
+
+                    const starshipsData = await starshipsResponse.json();
+                    const peopleData = await peopleResponse.json();
+                    const planetsData = await planetsResponse.json();
+
+                    setStore({
+                        starships: starshipsData.results,
+                        character: peopleData.results,
+                        planets: planetsData.results
+                    });
+                } catch (error) {
+                    console.error('Error al cargar datos:', error);
+                }
+            }
+        }
+    };
 };
 
 export default getState;
